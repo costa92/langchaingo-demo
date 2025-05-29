@@ -1,4 +1,4 @@
-module costa92/ai-demo
+module github.com/costa92/langchaingo-demo
 
 go 1.24.1
 
