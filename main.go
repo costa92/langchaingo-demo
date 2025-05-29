@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/tmc/langchaingo/llms/openai"
 
@@ -18,8 +17,9 @@ func main() {
 	ctx := context.Background()
 
 	// 检查环境变量
-	apiURL := "https://api.deepseek.com/v1"
-	apiKey := os.Getenv("DEEPSEEK_API_KEY")
+	apiURL := "https://api.siliconflow.cn/v1"
+	// apiKey := os.Getenv("SILICONFLOW_API_KEY")
+	apiKey := "sk-vighydxmfywrwzmqzhjcsaqifsvhexxzmzqrtryupxixcfss"
 
 	if apiURL == "" {
 		apiURL = "https://api.siliconflow.cn/v1"
@@ -29,7 +29,7 @@ func main() {
 	if apiKey == "" {
 		log.Printf("SILICONFLOW_API_KEY not set, using mock translation for testing")
 		// 使用模拟翻译进行测试
-		mock.RunMockTests()
+		// apiKey = "sk-vighydxmfywrwzmqzhjcsaqifsvhexxzmzqrtryupxixcfss"
 		return
 	}
 
@@ -39,7 +39,7 @@ func main() {
 	log.Printf("API Key: %s...%s", apiKey[:4], apiKey[len(apiKey)-4:])
 
 	// 使用支持 function calling 的模型
-	model := "deepseek-chat" // 使用更稳定的模型
+	model := "Qwen/Qwen3-30B-A3B" // 使用更稳定的模型
 	log.Printf("Using model: %s", model)
 
 	llm, err := openai.New(

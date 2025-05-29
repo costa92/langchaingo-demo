@@ -107,6 +107,8 @@ func Translate(ctx context.Context, llm *openai.LLM, text string, inputLanguage 
 		"text":           text,
 	})
 	if err != nil {
+		// 记录详细错误信息，帮助定位 OpenAI API 返回 400 错误的原因
+		log.Printf("OpenAI API 调用失败，详细错误信息: %v", err)
 		return "", fmt.Errorf("translation failed: %w", err)
 	}
 
