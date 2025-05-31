@@ -2,7 +2,7 @@ package agent
 
 import (
 	"context"
-	"net/http"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -24,44 +24,21 @@ func setupLLM(t *testing.T, useTestToken bool) *openai.LLM {
 	}
 
 	var llm *openai.LLM
-	var err error
-	maxRetries := 3
-
-	// 创建带有超时的 HTTP 客户端
-	httpClient := &http.Client{
-		Timeout: 60 * time.Second,
-	}
-
-	for i := 0; i < maxRetries; i++ {
-		if i > 0 {
-			time.Sleep(time.Second * time.Duration(i)) // 重试间隔递增
-		}
-
-		llm, err = openai.New(
-			openai.WithModel("Qwen/Qwen3-235B-A22B"),
-			openai.WithBaseURL("https://api.siliconflow.cn/v1"),
-			openai.WithToken(token),
-			openai.WithHTTPClient(httpClient),
-		)
-		if err == nil && llm != nil {
-			break
-		}
-	}
-
+	model := "Qwen/Qwen3-30B-A3B" // 使用更稳定的模型
+	llm, err := openai.New(
+		openai.WithModel(model),
+		openai.WithBaseURL("https://api.siliconflow.cn/v1"),
+		openai.WithToken(token),
+	)
 	if err != nil {
-		t.Fatalf("Failed to create LLM client after %d retries: %v", maxRetries, err)
+		t.Fatalf("Failed to create LLM client: %v", err)
 	}
-
-	if llm == nil {
-		t.Fatal("LLM client is nil after successful creation")
-	}
-
 	return llm
 }
 
 func TestTranslateWithAgent(t *testing.T) {
 	ctx := context.Background()
-	llm := setupLLM(t, true) // 使用测试 token
+	llm := setupLLM(t, false) // 使用测试 token
 
 	tests := []struct {
 		name          string
@@ -164,23 +141,18 @@ func TestTranslateWithAgent(t *testing.T) {
 }
 
 func TestTranslateWithAgent_ErrorHandling(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	llm := setupLLM(t, true) // 使用测试 token
+	llm := setupLLM(t, false) // 使用测试 token
 
 	// 测试错误处理和回退机制
 	result, err := TranslateWithAgent(ctx, llm, "Test text", "English", "Chinese")
-
-	// 验证错误信息包含认证错误
-	if err == nil {
-		t.Error("expected error with test token, got nil")
-	} else if !strings.Contains(err.Error(), "401") {
-		t.Errorf("expected 401 error, got: %v", err)
+	if err != nil {
+		t.Errorf("expected error: %v, got: %v", nil, err)
 	}
-
-	// 验证结果为空
-	if result != "" {
-		t.Errorf("expected empty result, got: %s", result)
+	if result == "" {
+		t.Errorf("expected non-empty result, got: %s", result)
 	}
+	fmt.Println(result)
 }

@@ -17,7 +17,7 @@ import (
 // TranslateWithAgent 使用完整的 agent 执行器进行翻译
 func TranslateWithAgent(ctx context.Context, llm *openai.LLM, text string, inputLanguage string, outputLanguage string) (string, error) {
 	// 添加超时控制，避免长时间阻塞
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 
 	// 输入验证
@@ -44,18 +44,9 @@ func TranslateWithAgent(ctx context.Context, llm *openai.LLM, text string, input
 	// 构建简化的输入提示
 	inputText := fmt.Sprintf("Translate '%s' from %s to %s.", text, inputLanguage, outputLanguage)
 
-	// 优化执行器配置，减少不必要的重试
-	executor, err := agents.Initialize(
-		llm,
-		agentTools,
-		agents.ZeroShotReactDescription,
-		agents.WithMaxIterations(2), // 限制最大迭代次数
-	)
-	if err != nil {
-		log.Printf("Failed to initialize agent executor: %v", err)
-		return "", fmt.Errorf("failed to initialize agent: %w", err)
-	}
+	agent := agents.NewOneShotAgent(llm, agentTools, agents.WithMaxIterations(2))
 
+	executor := agents.NewExecutor(agent)
 	// 执行 agent
 	result, err := chains.Run(ctx, executor, inputText)
 	if err != nil {
